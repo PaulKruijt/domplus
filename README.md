@@ -1,2 +1,2 @@
 # domplus
-Easily create a Data Driven DOM
+Easily create a Data Driven DOM.
