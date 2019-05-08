@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>TrippleD</title>
+<meta charset="utf-8">
+<script src="assets/js/td.js"></script>
+</head>
+<body>
+    <h1>TrippleD</h1>
+    <input placeholder="Update name of My First Project" onkeyup="td.collections.projects[1].name = this.value">
+    <ul td-collection="products" data-driven-collection="products">
+        <template>
+            <li>
+                <label td-property="name">${name}</label>
+                <label data-driven-property="name">${name}</label>
+                <span td-property="age">${age}</span>
+            </li>
+        </template>
+        <li td-model="product">
+            <label td-property="name">Kanye West</label>
+            <span td-property="age">39</span>
+            <a href="#" onclick="td.delete('products.product')">Remove</a>
+        </li>
+        <li td-model="2">
+            <label td-property="name">Rick Ashley</label>
+            <span td-property="age">40</span>
+        </li>
+    </ul>
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+            </tr>
+        </thead>
+        <tbody td-collection="projects">
+            <tr td-model="1">
+                <td td-property="name">My First Project</td>
+                <td td-property="foo">Test</td>
+            </tr>
+        </tbody>
+    </table>
+    <br>
+    <div td-collection="projects">
+        <div td-model="1">
+            <b td-property="name">My First Project</b> | 
+            <b td-property="bar">Jada</b>
+        </div>
+    </div>
+    <dl td-model="single-model">
+        <dt td-property="title">Coffee</dt>
+        <dd td-property="description">I like my coffee hot!</dd>
+    </dl>
+</body>
+</html>
