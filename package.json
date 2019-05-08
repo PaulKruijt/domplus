@@ -1,0 +1,26 @@
+{
+  "name": "trippled",
+  "version": "0.0.1",
+  "description": "Easily create a Data Driven DOM.",
+  "main": "assets/js/td.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/paulkruijt/trippled.git"
+  },
+  "keywords": [
+    "HTML",
+    "DOM",
+    "JavaScript",
+    "Data",
+    "Driven"
+  ],
+  "author": "Paul Kruijt",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/paulkruijt/trippled/issues"
+  },
+  "homepage": "https://github.com/paulkruijt/trippled#readme"
+}
