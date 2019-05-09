@@ -19,7 +19,7 @@
         <li td-model="product">
             <label td-property="name">Kanye West</label>
             <span td-property="age">39</span>
-            <a href="#" onclick="td.delete('products.product')">Remove</a>
+            <a href="#" onclick="td.model('products.product').delete(); return false;">Remove</a>
         </li>
         <li td-model="2">
             <label td-property="name">Rick Ashley</label>

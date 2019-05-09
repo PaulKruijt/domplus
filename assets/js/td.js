@@ -264,6 +264,8 @@ class TD {
      * @return Object
      */
     _observeCollectionDataHandler() {
+        const that = this;
+
         return {
             set(target, key, value) {
                 console.log('Setting collection data', target);
@@ -271,8 +273,20 @@ class TD {
             },
 
             deleteProperty(target, key) {
-                console.log('Deleting collection data', target);
-                return true;
+                const elements = target[key]._elements;
+                if (elements) {
+                    for (let i = 0; i < elements.length; i++) {
+                        const element = elements[i];
+                        element.parentNode.removeChild(element);
+                    }
+                }
+
+                // reset queried data
+                that._queriedParent = null;
+                that._queriedData = null;
+                that._queriedSelector = null;
+
+                return delete target[key];
             }
         };
     }
@@ -303,15 +317,15 @@ class TD {
                 }
 
                 // reset queried data
+                that._queriedParent = null;
                 that._queriedData = null;
+                that._queriedSelector = null;
 
                 return true;
             },
 
             deleteProperty(target, key) {
-                console.log('Deleting model data', target);
                 return true;
-                //return that._deleteProperty(target, key, false);
             }
         };
     }
@@ -350,14 +364,18 @@ class TD {
                 if (totalParts === 2) {
                     const collection = this.collections[parts[0]];
                     if (collection && collection[parts[1]]) {
+                        this._queriedParent = collection;
                         this._queriedData = collection[parts[1]];
+                        this._queriedSelector = parts[1];
                         return this;
                     }
                 }
                 // model lives in the root
                 else {
                     if (this.models[parts[0]]) {
+                        this._queriedParent = this.models;
                         this._queriedData = this.models[parts[0]];
+                        this._queriedSelector = parts[1];
                         return this;
                     }
                 }
