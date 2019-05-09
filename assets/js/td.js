@@ -7,7 +7,9 @@
 class TD {
     constructor() {
         // private
+        this._queriedParent = null;
         this._queriedData = null;
+        this._queriedSelector = null;
 
         // public
         this.collections = {};
@@ -84,9 +86,18 @@ class TD {
                     collectionRef = collection.getAttribute('td-collection');
                     if (collectionRef) {
                         if (!this.collections[collectionRef]) {
-                            this.collections[collectionRef] = {};
-                        } else if (this.collections[collectionRef][modelRef]) {
-                            oldData = this.collections[collectionRef][modelRef];
+                            this.collections[collectionRef] = {
+                                _elements: [collection]
+                            };
+                        } else {
+                            // add element to the data _elements property
+                            if (!this.collections[collectionRef]._elements.includes(collection)) {
+                                this.collections[collectionRef]._elements.push(collection);
+                            }
+
+                            if (this.collections[collectionRef][modelRef]) {
+                                oldData = this.collections[collectionRef][modelRef];
+                            }
                         }
                     }
                 } else {
@@ -230,8 +241,19 @@ class TD {
             },
 
             deleteProperty(target, key) {
-                console.log('Deleting collections data', target);
-                return true;
+                const elements = target[key]._elements;
+                if (elements) {
+                    for (let i = 0; i < elements.length; i++) {
+                        const element = elements[i];
+                        element.parentNode.removeChild(element);
+                    }
+                }
+
+                // reset queried data
+                this._queriedParent = null;
+                this._queriedSelector = null;
+
+                return delete target[key];
             }
         };
     }
@@ -265,7 +287,7 @@ class TD {
 
         return {
             set(target, key, value) {
-                console.log('Setting model data', target);
+                // console.log('Setting model data', target);
                 target[key] = value;
                 if (key !== '_elements') {
                     const elements = target._elements;
@@ -279,6 +301,10 @@ class TD {
                         }
                     }
                 }
+
+                // reset queried data
+                that._queriedData = null;
+
                 return true;
             },
 
@@ -291,30 +317,6 @@ class TD {
     }
 
     /**
-     * Generic deletion of an object property
-     * 
-     * @param  target 
-     * @param  integer key
-     * @param  boolean deleteParent
-     * @return boolean
-     */
-    _deleteProperty(target, key, deleteParent) {
-        const element = this.elements[key];
-        element.parentNode.removeChild(element);
-
-        delete target[key];
-
-        if (deleteParent) {
-            //console.log(target);
-            // elements = target[prop].elements;
-            // if (elements && !elements.length) {
-            // }
-        }
-
-        return true;
-    }
-
-    /**
      * Find model based on dot-separated string
      * 
      * @param  string selector 
@@ -323,8 +325,9 @@ class TD {
     collection(selector) {
         if (selector) {
             if (this.collections[selector]) {
-                this._queriedData = this.collections[selector];
-                return this._queriedData;
+                this._queriedParent = this.collections;
+                this._queriedSelector = selector;
+                return this;
             }
         }
 
@@ -348,14 +351,14 @@ class TD {
                     const collection = this.collections[parts[0]];
                     if (collection && collection[parts[1]]) {
                         this._queriedData = collection[parts[1]];
-                        return this._queriedData;
+                        return this;
                     }
                 }
                 // model lives in the root
                 else {
                     if (this.models[parts[0]]) {
                         this._queriedData = this.models[parts[0]];
-                        return this._queriedData;
+                        return this;
                     }
                 }
             }
@@ -383,28 +386,26 @@ class TD {
      * Update a model (in a collection)
      * 
      * @param  string selector 
-     * @param  Object data
-     * @return Object|null 
+     * @param  Object|string keyOrData
+     * @param  string|null value
+     * @return void
      */
-    update(selector, data = {}) {
-        const totalKeys = Object.keys(data).length;
-        if (totalKeys) {
-            let model = this.model(selector);
-            if (model) {
-                for (let i = 0; i < totalKeys; i++) {
-                    const key = Object.keys(data)[i];
-                    model[key] = data[key];
+    update(keyOrData, value = null) {
+        if (this._queriedData) {
+            if (typeof keyOrData === 'object') {
+                const totalKeys = Object.keys(keyOrData).length;
+                if (totalKeys) {
+                    for (let i = 0; i < totalKeys; i++) {
+                        const key = Object.keys(keyOrData)[i];
+                        this._queriedData[key] = keyOrData[key];
+                    }
                 }
-
-                return model;
-            } else {
-                console.warn(`Model not found based on the passed selector: ${selector}`);
+            } else if (typeof keyOrData === 'string') {
+                if (this._queriedData[keyOrData]) {
+                    this._queriedData[keyOrData] = value;
+                }
             }
-        } else {
-            console.warn(`You have to pass a data object with keys (second parameter) to update the model.`);
         }
-
-        return;
     }
 
     /**
@@ -413,27 +414,9 @@ class TD {
      * @param  string selector 
      * @return void 
      */
-    delete(selector) {
-        if (selector) {
-            const parts = selector.split('.');
-            const totalParts = parts.length;
-            if (totalParts < 3) {
-                // model might be in a collection
-                if (totalParts === 2) {
-                    const collection = this.collections[parts[0]];
-                    if (collection && collection[parts[1]]) {
-                        delete collection[parts[1]];
-                        return collection;
-                    }
-                }
-                // model lives in the root
-                else {
-                    if (this.models[parts[0]]) {
-                        delete this.models[parts[0]];
-                        return this.models;
-                    }
-                }
-            }
+    delete() {
+        if (this._queriedParent && this._queriedSelector) {
+            delete this._queriedParent[this._queriedSelector];
         }
     }
 }

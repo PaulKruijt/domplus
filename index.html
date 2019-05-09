@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>TrippleD</h1>
-    <input placeholder="Update name of My First Project" onkeyup="td.collections.projects[1].name = this.value">
+    <input placeholder="Update name of My First Project" onkeyup="td.model('projects.1').update('name', this.value)">
     <ul td-collection="products" data-driven-collection="products">
         <template>
             <li>
@@ -29,7 +29,7 @@
     <table>
         <thead>
             <tr>
-                <th>Name</th>
+                <th align="left">Name</th>
             </tr>
         </thead>
         <tbody td-collection="projects">
