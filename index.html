@@ -11,9 +11,9 @@
     <ul td-collection="products" data-driven-collection="products">
         <template>
             <li>
-                <label td-property="name">${name}</label>
-                <label data-driven-property="name">${name}</label>
-                <span td-property="age">${age}</span>
+                <label td-property="name"></label>
+                <span td-property="age"></span>
+                <a href="#" onclick="td.model('products.product').delete(); return false;">Remove</a>
             </li>
         </template>
         <li td-model="product">

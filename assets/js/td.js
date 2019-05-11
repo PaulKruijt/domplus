@@ -16,7 +16,7 @@ class TD {
         this.models = {};
 
         // run scripts
-        this._initialize();
+        this._init();
     }
     
     /**
@@ -24,7 +24,7 @@ class TD {
      * 
      * @return void
      */
-    _initialize() {
+    _init() {
         window.td = this;
         this._collectData();
         this._observeCollectedData();
@@ -64,6 +64,44 @@ class TD {
     }
 
     /**
+     * Reset private query properties
+     * 
+     * @return void
+     */
+    _resetQueriedData() {
+        this._queriedParent = null;
+        this._queriedData = null;
+        this._queriedSelector = null;
+    }
+
+    /**
+     * Get the template of the collection
+     * 
+     * @param  HTMLElement collection
+     * @return HTMLTemplateElement|null
+     */
+    _template(collection) {
+        const children = collection.children;
+        if (children.length) {
+            let template = null;
+            for (let i = 0; i < children.length; i++) {
+                const child = children[i];
+                // always set the first child as the template
+                if (i == 0) {
+                    template = [child];
+                }
+                // when it is indeed a template return it
+                if (child.nodeName === 'TEMPLATE') {
+                    return child.content.children;
+                }
+            }
+            return template;
+        }
+
+        return;
+    }
+
+    /**
      * Collect all of the data for every mutation
      * 
      * @return void
@@ -86,8 +124,10 @@ class TD {
                     collectionRef = collection.getAttribute('td-collection');
                     if (collectionRef) {
                         if (!this.collections[collectionRef]) {
+                            const template = this._template(collection);
                             this.collections[collectionRef] = {
-                                _elements: [collection]
+                                _elements: [collection],
+                                _template: template
                             };
                         } else {
                             // add element to the data _elements property
@@ -212,7 +252,9 @@ class TD {
         if (refs.length) {
             for (let i = 0; i < refs.length; i++) {
                 const ref = refs[i];
-                root[ref] = this._observeData(root[ref], this._observeModelDataHandler());
+                if (ref.substring(1, 0) !== '_') {
+                    root[ref] = this._observeData(root[ref], this._observeModelDataHandler());
+                }
             }
         }
     }
@@ -250,8 +292,7 @@ class TD {
                 }
 
                 // reset queried data
-                this._queriedParent = null;
-                this._queriedSelector = null;
+                this._resetQueriedData();
 
                 return delete target[key];
             }
@@ -267,8 +308,44 @@ class TD {
         const that = this;
 
         return {
-            set(target, key, value) {
-                console.log('Setting collection data', target);
+            set(target, key, data) {
+                const templateElements = target._template;
+                const properties = Object.keys(data);
+
+                if (templateElements.length) {
+                    const injectElements = target._elements;
+
+                    if (injectElements.length) {
+                        for (let a = 0; a < injectElements.length; a++) {
+                            const injectElement = injectElements[a];
+
+                            for (let b = 0; b < templateElements.length; b++) {
+                                const templateElement = templateElements[b];
+                                const clonedElement = templateElement.cloneNode(true);
+                                clonedElement.setAttribute('td-model', key);
+                                if (!data._elements) {
+                                    data._elements = [];
+                                }
+                                data._elements.push(clonedElement);
+                                
+                                // fill content
+                                for (let c = 0; c < properties.length; c++) {
+                                    const property = properties[c];
+                                    const val = data[property];
+                                    const propertyElement = clonedElement.querySelector(`[td-property="${property}"]`);
+                                    if (propertyElement) {
+                                        propertyElement.innerText = val;
+                                    }
+                                }
+
+                                // inject in document
+                                injectElement.appendChild(clonedElement);
+                            }
+                        }
+                    }
+                }
+
+                target[key] = that._observeData(data, that._observeModelDataHandler());
                 return true;
             },
 
@@ -282,9 +359,7 @@ class TD {
                 }
 
                 // reset queried data
-                that._queriedParent = null;
-                that._queriedData = null;
-                that._queriedSelector = null;
+                that._resetQueriedData();
 
                 return delete target[key];
             }
@@ -317,9 +392,7 @@ class TD {
                 }
 
                 // reset queried data
-                that._queriedParent = null;
-                that._queriedData = null;
-                that._queriedSelector = null;
+                that._resetQueriedData();
 
                 return true;
             },
@@ -340,6 +413,7 @@ class TD {
         if (selector) {
             if (this.collections[selector]) {
                 this._queriedParent = this.collections;
+                this._queriedData = this.collections[selector];
                 this._queriedSelector = selector;
                 return this;
             }
@@ -389,15 +463,14 @@ class TD {
     /**
      * Insert a model (in a collection)
      * 
-     * @param  string collectionRef 
-     * @param  object data
+     * @param  string reference
+     * @param  Object data
      * @return void 
      */
-    insert(collectionRef, data) {
-        // td.insert('projects', {...});
-        // td.update('projects.1', {...});
-        // td.delete('projects.1');
-        // td.find('projects.1');
+    insert(reference, data) {
+        if (reference && this._queriedData && !this._queriedData[reference] && typeof data === 'object' && Object.keys(data).length) {
+            this._queriedData[reference] = data;
+        }
     }
 
     /**
