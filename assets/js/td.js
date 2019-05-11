@@ -233,12 +233,12 @@ class TD {
                 this.collections[collectionRef] = this._observeData(this.collections[collectionRef], this._observeCollectionDataHandler());
             }
 
-            this.collections = this._observeData(this.collections, this._observeCollectionsDataHandler());
+            // this.collections = this._observeData(this.collections, this._observeCollectionsDataHandler());
         }
         
         // observe model data in root
         this._observeModelData(this.models);
-        this.models = this._observeData(this.models, this._observeModelDataHandler());
+        // this.models = this._observeData(this.models, this._observeModelDataHandler());
     }
 
     /**
@@ -337,6 +337,9 @@ class TD {
                                         propertyElement.innerText = val;
                                     }
                                 }
+
+                                // replace placeholders
+                                clonedElement.innerHTML = clonedElement.innerHTML.replace('${reference}', key);
 
                                 // inject in document
                                 injectElement.appendChild(clonedElement);

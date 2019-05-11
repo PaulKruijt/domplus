@@ -13,7 +13,7 @@
             <li>
                 <label td-property="name"></label>
                 <span td-property="age"></span>
-                <a href="#" onclick="td.model('products.product').delete(); return false;">Remove</a>
+                <a href="#" onclick="td.model('products.${reference}').delete(); return false;">Remove</a>
             </li>
         </template>
         <li td-model="product">
@@ -26,6 +26,8 @@
             <span td-property="age">40</span>
         </li>
     </ul>
+    <button onclick="td.collection('products').insert('test', {name:'Mila', age: 9})">Add product</button>
+    <br>
     <table>
         <thead>
             <tr>
