@@ -10,10 +10,11 @@ class TD {
         this._queriedParent = null;
         this._queriedData = null;
         this._queriedSelector = null;
-
+        
         // public
         this.collections = {};
         this.models = {};
+        this.watchers = [];
 
         // run scripts
         this._init();
@@ -26,8 +27,12 @@ class TD {
      */
     _init() {
         window.td = this;
-        this._collectData();
-        this._observeCollectedData();
+
+        // after setting the global td object, run the script after the dom is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            this._collectData();
+            this._observeCollectedData();
+        });
     }
 
     /**
@@ -78,7 +83,7 @@ class TD {
      * Get the template of the collection
      * 
      * @param  HTMLElement collection
-     * @return HTMLTemplateElement|null
+     * @return Array
      */
     _template(collection) {
         const children = collection.children;
@@ -115,6 +120,7 @@ class TD {
 
                 const model = models[i];
                 const modelRef = model.getAttribute('td-model');
+                const modelWatcher = model.getAttribute('td-watcher');
                 this._replaceDataAttribute(model, 'model');
 
                 const collection = this._parent(model, '[td-collection],[data-td-collection]');
@@ -162,6 +168,10 @@ class TD {
                 }
                 data._elements.push(model);
 
+                if (!data._watcher) {
+                    data._watcher = modelWatcher;
+                }
+
                 // set new data
                 if (collection) {
                     this.collections[collectionRef][modelRef] = data;
@@ -190,7 +200,7 @@ class TD {
                 this._replaceDataAttribute(element, subject);
 
                 const reference = element.getAttribute(`td-${subject}`);
-                data[reference] = element.innerText;
+                data[reference] = element.innerText || element.value;
             }
         }
 
@@ -379,11 +389,15 @@ class TD {
 
         return {
             set(target, key, value) {
-                // console.log('Setting model data', target);
-                target[key] = value;
-                if (key !== '_elements') {
+                if (key.substring(1, 0) !== '_') {
                     const elements = target._elements;
                     if (elements) {
+                        if (that.watchers[target._watcher] && that.watchers[target._watcher][key]) {
+                            value = that.watchers[target._watcher][key](value, that._queriedData);
+                        }
+
+                        target[key] = value;
+
                         for (let i = 0; i < elements.length; i++) {
                             const element = elements[i];
                             const property = element.querySelector(`[td-property="${key}"]`);
@@ -516,6 +530,4 @@ class TD {
 }
 
 // always run DomPlus
-document.addEventListener('DOMContentLoaded', () => {
-    new TD;
-});
+new TD;

@@ -4,10 +4,10 @@
 <title>TrippleD</title>
 <meta charset="utf-8">
 <script src="assets/js/td.js"></script>
+<script src="assets/js/product.js"></script>
 </head>
 <body>
     <h1>TrippleD</h1>
-    <input placeholder="Update name of My First Project" onkeyup="td.model('projects.1').update('name', this.value)">
     <ul td-collection="products" data-driven-collection="products">
         <template>
             <li>
@@ -16,17 +16,27 @@
                 <a href="#" onclick="td.model('products.${reference}').delete(); return false;">Remove</a>
             </li>
         </template>
-        <li td-model="product">
-            <label td-property="name">Kanye West</label>
-            <span td-property="age">39</span>
-            <a href="#" onclick="td.model('products.product').delete(); return false;">Remove</a>
+        <li td-model="1" td-watcher="product">
+            <label td-property="name">iPad</label>
+            <span td-property="amount">1</span>
+            <span>€ <span td-property="price">99,95</span></span>
+            <span>€ <span td-property="total">99,95</span></span>
+            <a href="#" onclick="td.model('products.1').delete(); return false;">Remove</a>
         </li>
-        <li td-model="2">
-            <label td-property="name">Rick Ashley</label>
-            <span td-property="age">40</span>
+        <li td-model="2" td-watcher="product">
+            <label td-property="name">iMac</label>
+            <input type="number" value="2" td-property="amount" min="1" max="1000" onchange="td.model('products.2').update({amount: this.value})">
+            <span>€ <span td-property="price">1999,95</span></span>
+            <span>€ <span td-property="total">3999,90</span></span>
+            <a href="#" onclick="td.model('products.2').delete(); return false;">Remove</a>
         </li>
     </ul>
     <button onclick="td.collection('products').insert('test', {name:'Mila', age: 9})">Add product</button>
+    <br>
+    <hr>
+    <br>
+    <input placeholder="Update name of My First Project" onkeyup="td.model('projects.1').update('name', this.value)">
+    <br>
     <br>
     <table>
         <thead>
